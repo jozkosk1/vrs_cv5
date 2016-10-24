@@ -7,7 +7,7 @@
 #include "vrs_cv5.h"
 extern uint16_t ADC_hodnota;
 extern uint8_t p;
-extern uint16_t sprava[6];
+extern uint8_t sprava[7];
 extern uint8_t i;
 
 
@@ -26,21 +26,14 @@ static uint16_t temp;
 			if (i == 0)
 			{
 				temp = ADC_hodnota*1000/4095*33;
-				sprava[0] 	= 	temp;
-				sprava[1] 	= 	0;
-				sprava[2] 	= 	0;
-				sprava[3] 	= 	0;
-				sprava[4] 	= 	0;
-				sprava[5] 	= 	0;
-				sprava[6] 	= 	0;
-			/*
-				sprava[0] 	= 	(temp/10000) + 0x30;
+
+				sprava[0] 	= 	(temp/10000) + 48;
 				sprava[1] 	= 	0x2E;
-				sprava[2] 	= 	(temp/1000)  + 0x30;
-				sprava[3] 	= 	(temp/100)   + 0x30;
+				sprava[2] 	= 	(temp/1000)%10  + 48;
+				sprava[3] 	= 	(temp/100)%10   + 48;
 				sprava[4] 	= 	0x56;
 				sprava[5] 	= 	'\n';
-				sprava[6] 	= 	'\r';*/
+				sprava[6] 	= 	'\r';
 			}
 
 

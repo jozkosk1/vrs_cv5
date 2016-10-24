@@ -32,7 +32,7 @@ SOFTWARE.
 #include "vrs_cv5.h"
 uint16_t ADC_hodnota, uart_value;
 uint8_t p;
-uint16_t sprava[6];
+uint8_t sprava[7];
 uint8_t i=0;
 
 
