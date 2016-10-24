@@ -11,8 +11,10 @@
 
 
 void ADC_init(void);
-void USART_init(void);
+void UART_init(void);
 void NVIC_init(void);
+void GPIO_init(void);
+
 
 
 

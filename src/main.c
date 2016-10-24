@@ -29,6 +29,11 @@ SOFTWARE.
 /* Includes */
 #include <stddef.h>
 #include "stm32l1xx.h"
+#include "vrs_cv5.h"
+uint16_t ADC_hodnota, uart_value;
+uint8_t p;
+uint16_t sprava[6];
+uint8_t i=0;
 
 
 /* Private typedef */
@@ -48,32 +53,24 @@ SOFTWARE.
 */
 int main(void)
 {
-  int i = 0;
 
-  /**
-  *  IMPORTANT NOTE!
-  *  See the <system_*.c> file and how/if the SystemInit() function updates 
-  *  SCB->VTOR register. Sometimes the symbol VECT_TAB_SRAM needs to be defined 
-  *  when building the project if code has been located to RAM and interrupts 
-  *  are used. Otherwise the interrupt table located in flash will be used.
-  *  E.g.  SCB->VTOR = 0x20000000;  
-  */
 
-  /**
-  *  At this stage the microcontroller clock setting is already configured,
-  *  this is done through SystemInit() function which is called from startup
-  *  file (startup_stm32l1xx_hd.s) before to branch to application main.
-  *  To reconfigure the default setting of SystemInit() function, refer to
-  *  system_stm32l1xx.c file
-  */
+  GPIO_init();
+  ADC_init();
+  UART_init();
+  NVIC_init();
 
-  /* TODO - Add your application code here */
+  USART_SendData(USART2, ' ');
+
 
 
   /* Infinite loop */
   while (1)
   {
-	i++;
+
+
+
+
   }
   return 0;
 }
