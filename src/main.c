@@ -34,6 +34,7 @@ uint16_t ADC_hodnota, uart_value;
 uint8_t p;
 uint8_t sprava[7];
 uint8_t i=0;
+uint8_t mode=0;
 
 
 /* Private typedef */
@@ -63,12 +64,11 @@ int main(void)
   USART_SendData(USART2, ' ');
 
 
-
   /* Infinite loop */
   while (1)
   {
 
-
+	  flash_LED();
 
 
   }

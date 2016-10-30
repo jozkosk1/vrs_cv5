@@ -9,6 +9,8 @@ extern uint16_t ADC_hodnota;
 extern uint8_t p;
 extern uint8_t sprava[7];
 extern uint8_t i;
+extern uint8_t mode;
+
 
 
 void ADC1_IRQHandler (void){
@@ -21,39 +23,55 @@ void ADC1_IRQHandler (void){
 
 void USART2_IRQHandler (void){
 static uint16_t temp;
+uint16_t receive;
 		if (USART_GetFlagStatus(USART2, USART_FLAG_TC))
 		{
-			if (i == 0)
+			if (mode)
 			{
-				temp = ADC_hodnota*1000/4095*33;
+				if (i == 0)
+				{
+					temp = ADC_hodnota*1000/4095*33;
 
-				sprava[0] 	= 	(temp/10000) + 48;
-				sprava[1] 	= 	0x2E;
-				sprava[2] 	= 	(temp/1000)%10  + 48;
-				sprava[3] 	= 	(temp/100)%10   + 48;
-				sprava[4] 	= 	0x56;
-				sprava[5] 	= 	'\n';
-				sprava[6] 	= 	'\r';
+					sprava[0] 	= 	(temp/10000) + 48;
+					sprava[1] 	= 	0x2E;
+					sprava[2] 	= 	(temp/1000)%10  + 48;
+					sprava[3] 	= 	(temp/100)%10   + 48;
+					sprava[4] 	= 	0x56;
+					sprava[5] 	= 	'\n';
+					sprava[6] 	= 	'\r';
+				}
+				USART_SendData(USART2, sprava[i]);
+				i++;
+				if (i >= 7)	i=0;
 			}
+			else
+			{
+				if (i == 0)
+				{
+						temp = ADC_hodnota;
 
-
-			USART_SendData(USART2, sprava[i]);
-			i++;
-			if (i >= 7)	i=0;
-
+						sprava[0] 	= 	(temp/1000) + 48;
+						sprava[1] 	= 	(temp/100)%10  + 48;
+						sprava[2] 	= 	(temp/10)%10   + 48;
+						sprava[3] 	= 	temp%10   + 48;
+						sprava[4] 	= 	'\n';
+						sprava[5] 	= 	'\r';
+				}
+				USART_SendData(USART2, sprava[i]);
+				i++;
+				if (i >= 6)	i=0;
+			}
+		}
+		if (USART_GetFlagStatus(USART2, USART_FLAG_RXNE))
+		{
+		 	receive = USART_ReceiveData(USART2);
+		 	if (receive == 'm')
+		 	{
+		 		mode ^= 1;
+		 		i=0;
+		 	}
 		}
 }
-
-
-
-
-
-
-
-
-
-
-
 void UART_init (void)
 {
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
@@ -70,10 +88,6 @@ void UART_init (void)
 
 	USART_Cmd(USART2, ENABLE);
 }
-
-
-
-
 void NVIC_init(void)
 {
 
@@ -101,9 +115,10 @@ void NVIC_init(void)
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);			//povolenie prerusenia na RXNE
 	USART_ITConfig(USART2, USART_IT_TXE, ENABLE);			//povolenie prerusenia na TXE
 }
-
 void GPIO_init(void)
 {
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+
 	 GPIO_InitTypeDef	GPIO_InitStruct;
 
 	 GPIO_InitStruct.GPIO_Pin 	= GPIO_Pin_0;			//ADC na pine 0
@@ -111,14 +126,24 @@ void GPIO_init(void)
 	 GPIO_InitStruct.GPIO_PuPd 	= GPIO_PuPd_NOPULL;		//ziadny Pull na pine 0
 	 GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-	 RCC_HSICmd(ENABLE);								//HSI oscilator zapnuty
 
+
+	 GPIO_InitStruct.GPIO_Pin 	= GPIO_Pin_5;
+	 GPIO_InitStruct.GPIO_Mode 	= GPIO_Mode_OUT;
+	 GPIO_InitStruct.GPIO_PuPd 	= GPIO_PuPd_UP;
+	 GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	 GPIO_InitStruct.GPIO_Speed = GPIO_Speed_40MHz;
+	 GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	 RCC_HSICmd(ENABLE);								//HSI oscilator zapnuty
 	 /* Check that HSI oscillator is ready */
 	 while(RCC_GetFlagStatus(RCC_FLAG_HSIRDY) == RESET);
 
+
+
 	 GPIO_InitTypeDef gpioInitStruct;
 
-	 RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+
 
 	 gpioInitStruct.GPIO_Mode 	= GPIO_Mode_AF;					//alternativna funkcia
 	 gpioInitStruct.GPIO_OType 	= GPIO_OType_PP;				//PushPull
@@ -132,8 +157,6 @@ void GPIO_init(void)
 	 GPIO_PinAFConfig(GPIOA, GPIO_PinSource3, GPIO_AF_USART2);
 
 }
-
-
 void ADC_init (void)
 {
 	 	 ADC_InitTypeDef	ADC_InitStruct;
@@ -164,4 +187,26 @@ void ADC_init (void)
 		 }
 		 /* Start ADC Software Conversion */
 		 ADC_SoftwareStartConv(ADC1);
+}
+void flash_LED (void)
+{
+	uint32_t i,j;
+	i = cyklus(ADC_hodnota);
+	 i = i * 10;
+	GPIO_ToggleBits(GPIOA, GPIO_Pin_5);
+	for(j=0;j<i;j++)
+	;
+}
+int cyklus(int adc)
+{
+	if ((adc>3900)&&(adc<3980))
+		return 100;
+	if ((adc>1950)&&(adc<2080))
+			return 500;
+	if ((adc>2850)&&(adc<3020))
+			return 1000;
+	if ((adc>3400)&&(adc<3500))
+			return 3000;
+	if ((adc>3600)&&(adc<3700))
+			return 6000;
 }

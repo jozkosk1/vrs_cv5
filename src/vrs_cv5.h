@@ -14,8 +14,8 @@ void ADC_init(void);
 void UART_init(void);
 void NVIC_init(void);
 void GPIO_init(void);
-
-
+void flash_LED (void);
+int cyklus(int adc);
 
 
 #endif /* VRS_CV5_H_ */
